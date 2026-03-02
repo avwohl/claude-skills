@@ -32,7 +32,8 @@ the exact superellipse (n=5) formula for computing squircle corner intrusion
 at any screen coordinate, with verified worked examples and a pixel bitmask
 generation algorithm.
 
-Eliminates guesswork when positioning UI elements near rounded screen edges.
+Eliminates guesswork when positioning UI elements near camera cutouts and
+rounded screen edges.
 
 ## Tools
 
