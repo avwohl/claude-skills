@@ -34,6 +34,23 @@ generation algorithm.
 
 Eliminates guesswork when positioning UI elements near rounded screen edges.
 
+## Tools
+
+Companion scripts that implement skill algorithms.
+
+### tools/apply_device_mask.py
+
+Overlays a device screen mask on a simulator screenshot.  Renders squircle
+corners, Dynamic Island / notch cutout, and optional safe area boundary lines.
+Auto-detects device from pixel dimensions.
+
+```bash
+pip3 install Pillow numpy
+python3 tools/apply_device_mask.py screenshot.png              # basic mask
+python3 tools/apply_device_mask.py --safe-areas screenshot.png # + safe area lines
+python3 tools/apply_device_mask.py --device iphone16pro screenshot.png
+```
+
 ## Installation
 
 Copy a skill file into your project:

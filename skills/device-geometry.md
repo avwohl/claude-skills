@@ -5,9 +5,8 @@ description: iPhone/iPad screen geometry and the exact algorithm for computing s
 
 # Device Screen Geometry & Mask Computation
 
-Full device data: `docs/device-screen-geometry.md`
-
-This skill defines the **exact algorithm** for computing screen-edge
+This skill is the **single source of truth** for iOS device screen geometry
+and the **exact algorithm** for computing screen-edge
 visibility.  Every Claude session MUST use these formulas — no heuristics,
 no "about 45%", no guessing.
 
@@ -208,8 +207,17 @@ It only matters for elements near the vertical center of the screen.
 
 ## Part 4: Generating a Pixel Bitmask Image
 
-For the mask overlay tool (`scripts/apply_device_mask.py`) or any other
-visualization that needs a device-shaped mask.
+For the mask overlay tool (`tools/apply_device_mask.py` in the claude-skills
+repo) or any other visualization that needs a device-shaped mask.
+
+The tool auto-detects the device from screenshot pixel dimensions and renders
+squircle corners, Dynamic Island / notch cutout, and safe area lines:
+
+    python3 tools/apply_device_mask.py screenshot.png              # basic mask
+    python3 tools/apply_device_mask.py --safe-areas screenshot.png # + safe area lines
+    python3 tools/apply_device_mask.py --device iphone16pro screenshot.png
+
+Requires: `pip3 install Pillow numpy`
 
 ### Inputs
 
@@ -408,7 +416,6 @@ pure math with no device-specific constants.
 
 ## Sources
 
-  docs/device-screen-geometry.md         (full device data, all models)
   docs/TODO-device-masks.md              (mask overlay tool spec)
   kylebashour.com/posts/finding-the-real-iphone-x-corner-radius
   Superellipse: en.wikipedia.org/wiki/Superellipse
