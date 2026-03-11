@@ -35,9 +35,34 @@ generation algorithm.
 Eliminates guesswork when positioning UI elements near camera cutouts and
 rounded screen edges.
 
+### ios-app-scaffold
+
+Complete recipe for creating a new iOS/Mac Catalyst app from scratch using
+XcodeGen.  Covers project.yml configuration, Config.xcconfig with optional
+Local.xcconfig for code signing, asset catalog setup, app icon generation
+(RGB, no alpha), Info.plist keys needed for App Store validation, and the
+full setup sequence from `mkdir` to `gh repo create`.
+
+Handles the private-vs-public repo decision (team ID in project.yml vs
+gitignored Local.xcconfig) and includes a "what NOT to do" section covering
+the alpha channel, missing icon keys, and export compliance pitfalls.
+
 ## Tools
 
 Companion scripts that implement skill algorithms.
+
+### tools/generate_ios_icon.py
+
+Generates iOS + Mac Catalyst app icons at all required sizes (16px through
+1024px).  Always outputs RGB with no alpha channel.  Supports built-in shapes
+(paw print, circle, text) or use as a starting point for custom icons.
+
+```bash
+pip3 install Pillow
+python3 tools/generate_ios_icon.py --bg '#E8683A' --shape paw output_dir/
+python3 tools/generate_ios_icon.py --bg '#2A9D8F' --shape text --text 'AB' output_dir/
+python3 tools/generate_ios_icon.py --bg '30,120,200' --shape none output_dir/
+```
 
 ### tools/apply_device_mask.py
 
