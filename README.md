@@ -35,6 +35,20 @@ generation algorithm.
 Eliminates guesswork when positioning UI elements near camera cutouts and
 rounded screen edges.
 
+### apple-hig
+
+Apple Human Interface Guidelines reference covering typography (Dynamic Type
+sizes, SF Pro text styles, the complete size table from xSmall to AX5), color
+system (semantic and system colors for light/dark mode), layout (8pt grid,
+spacing tokens, margins, component heights, safe areas), UI components (bars,
+buttons, sheets, alerts with SwiftUI mappings), navigation patterns
+(hierarchical, flat, modal), accessibility checklist (Dynamic Type, VoiceOver,
+contrast ratios, Reduce Motion), app icon requirements, platform differences
+(iPhone vs iPad vs Mac), and the Liquid Glass design system introduced in
+iOS 26.
+
+Includes a "what NOT to do" section with the 12 most common HIG violations.
+
 ### ios-app-scaffold
 
 Complete recipe for creating a new iOS/Mac Catalyst app from scratch using
