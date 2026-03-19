@@ -38,32 +38,21 @@ upload.
 
 ---
 
-## Part 2: Code Signing — Private vs Public Repo
+## Part 2: Code Signing via Local.xcconfig
 
-**Ask the user two questions:**
-1. "Is this repo currently private or public?"
-2. "Will it stay that way, or might it go public later?"
+Always use the Local.xcconfig pattern. It keeps the team ID out of version
+control and works for both private and public repos.
 
-If the repo **will ever be public** (even if private now), use the
-Local.xcconfig pattern.  Only put the team ID directly in project.yml if the
-repo is private AND will stay private forever.
-
-### Private forever — team ID in project.yml
-
-```yaml
-settings:
-  base:
-    DEVELOPMENT_TEAM: 644N5FNKG2
-```
-
-### Public (or might go public) — team ID in Local.xcconfig (gitignored)
-
-**Config.xcconfig:**
+**Config.xcconfig** (checked into git):
 ```
 #include? "Local.xcconfig"
 ```
 
-**Local.xcconfig:**
+The `?` makes the include optional — builds won't fail if the file is missing
+(CI, fresh clones). Config.xcconfig is referenced by **every target** in
+project.yml via `configFiles:`.
+
+**Local.xcconfig** (gitignored, never committed):
 ```
 DEVELOPMENT_TEAM = 644N5FNKG2
 ```
@@ -71,6 +60,18 @@ DEVELOPMENT_TEAM = 644N5FNKG2
 **.gitignore must include:**
 ```
 Local.xcconfig
+```
+
+**project.yml must reference Config.xcconfig on every target:**
+```yaml
+  MyApp:
+    configFiles:
+      Debug: Config.xcconfig
+      Release: Config.xcconfig
+  MyAppTests:
+    configFiles:
+      Debug: Config.xcconfig
+      Release: Config.xcconfig
 ```
 
 **project.yml must NOT set DEVELOPMENT_TEAM** — it comes from the xcconfig.
@@ -82,41 +83,70 @@ Local.xcconfig
 ```yaml
 name: <appname>
 options:
-  bundleIdPrefix: com.awohl
+  xcodeVersion: "16.0"
   deploymentTarget:
     iOS: "17.0"
-  xcodeVersion: "16.0"
+  defaultConfig: Release
+  groupSortPosition: top
+  generateEmptyDirectories: true
+
 settings:
   base:
-    SUPPORTS_MACCATALYST: YES
     SWIFT_VERSION: "5.9"
+    MARKETING_VERSION: "0.1.0"
+    SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD: false
+
+configs:
+  Debug: debug
+  Release: release
+
 targets:
   <appname>:
     type: application
     platform: iOS
-    sources:
-      - path: <appname>
     configFiles:
       Debug: Config.xcconfig
       Release: Config.xcconfig
+    sources:
+      - path: <appname>
+      - path: Shared     # optional, for shared code
     settings:
       base:
-        # DEVELOPMENT_TEAM: 644N5FNKG2    # only if private repo
-        MARKETING_VERSION: "0.1.0"
-        CURRENT_PROJECT_VERSION: 1
         PRODUCT_BUNDLE_IDENTIFIER: com.awohl.<appname>
-        INFOPLIST_KEY_CFBundleDisplayName: <DisplayName>
+        GENERATE_INFOPLIST_FILE: true
+        INFOPLIST_GENERATION_MODE: GeneratedFile
+        CURRENT_PROJECT_VERSION: 1
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
-        INFOPLIST_KEY_CFBundleIconName: AppIcon
+        SUPPORTED_PLATFORMS: "iphoneos iphonesimulator"
+        SUPPORTS_MACCATALYST: true
+        DERIVE_MACCATALYST_PRODUCT_BUNDLE_IDENTIFIER: false
+        TARGETED_DEVICE_FAMILY: "1,2,6"
+        INFOPLIST_KEY_UILaunchScreen_Generation: true
         INFOPLIST_KEY_ITSAppUsesNonExemptEncryption: NO
-        INFOPLIST_KEY_UILaunchScreen_Generation: YES
-        INFOPLIST_KEY_UISupportedInterfaceOrientations: >-
+        INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone: >-
           UIInterfaceOrientationPortrait
           UIInterfaceOrientationLandscapeLeft
           UIInterfaceOrientationLandscapeRight
+        INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad: >-
+          UIInterfaceOrientationPortrait
           UIInterfaceOrientationPortraitUpsideDown
-        INFOPLIST_KEY_UIRequiresFullScreen: NO
-        GENERATE_INFOPLIST_FILE: YES
+          UIInterfaceOrientationLandscapeLeft
+          UIInterfaceOrientationLandscapeRight
+
+  <appname>Tests:
+    type: bundle.unit-test
+    platform: iOS
+    configFiles:
+      Debug: Config.xcconfig
+      Release: Config.xcconfig
+    sources:
+      - path: <appname>Tests
+    dependencies:
+      - target: <appname>
+    settings:
+      base:
+        GENERATE_INFOPLIST_FILE: true
+        PRODUCT_BUNDLE_IDENTIFIER: com.awohl.<appname>.tests
 ```
 
 ### Required Info.plist keys checklist
@@ -141,28 +171,57 @@ If the app uses location:
 **CRITICAL**: iOS icons must be **RGB with NO alpha channel**.  RGBA icons
 will be rejected by App Store Connect with "Invalid Image Asset" errors.
 
-### Icon generation script
+### Which sizes are needed
 
-Use `tools/generate_ios_icon.py` from this repo, or inline:
+- **iOS (17+)**: One single 1024x1024 image with `"idiom": "universal",
+  "platform": "ios"`. Xcode auto-generates all device sizes from this.
+- **Mac Catalyst**: Explicit sizes at 16, 32, 64, 128, 256, 512, 1024.
+  Mac icons need specific @1x/@2x entries — Xcode does NOT auto-derive them.
+
+If the app is iOS-only (no Mac Catalyst), you only need the 1024.
+If it supports Mac Catalyst, you need all 7 sizes.
+
+### Icon generation script (Pillow)
 
 ```python
-from PIL import Image, ImageDraw
+from PIL import Image, ImageDraw, ImageFont
+import math
 
 SIZE = 1024
+output_dir = "<appname>/Assets.xcassets/AppIcon.appiconset"
+
 # RGB mode — NOT RGBA. No alpha channel.
-img = Image.new('RGB', (SIZE, SIZE), (R, G, B))
+img = Image.new("RGB", (SIZE, SIZE))
 draw = ImageDraw.Draw(img)
 
-# Draw your icon content here...
+# Example: gradient background
+for y in range(SIZE):
+    t = y / SIZE
+    r = int(58 + t * 30)
+    g = int(98 + t * 40)
+    b = int(191 + t * 50)
+    draw.line([(0, y), (SIZE, y)], fill=(r, g, b))
 
-# Save the 1024 master
-img.save('icon_1024.png')
+# Draw your icon content here (text, shapes, etc.)
+# Use ImageFont.truetype("/System/Library/Fonts/SFCompactRounded.ttf", size)
+# for SF fonts on macOS
 
-# Generate all required sizes
-SIZES = [16, 20, 29, 32, 40, 58, 60, 64, 76, 80, 87,
-         120, 128, 152, 167, 180, 256, 512]
-for s in SIZES:
-    img.resize((s, s), Image.LANCZOS).save(f'icon_{s}.png')
+# Optional: vignette (darken corners)
+for y in range(SIZE):
+    for x in range(SIZE):
+        dx = (x - SIZE / 2) / (SIZE / 2)
+        dy = (y - SIZE / 2) / (SIZE / 2)
+        dist = math.sqrt(dx * dx + dy * dy)
+        if dist > 0.7:
+            darken = min(int((dist - 0.7) * 180), 120)
+            px = img.getpixel((x, y))
+            img.putpixel((x, y), tuple(max(0, c - darken) for c in px))
+
+# Save 1024 master + all Mac Catalyst sizes
+MAC_SIZES = [16, 32, 64, 128, 256, 512, 1024]
+for s in MAC_SIZES:
+    resized = img.resize((s, s), Image.LANCZOS)
+    resized.save(f"{output_dir}/icon_{s}.png", "PNG")
 ```
 
 ### AppIcon.appiconset/Contents.json
@@ -191,33 +250,22 @@ for s in SIZES:
 }
 ```
 
-The single `icon_1024.png` with `"idiom": "universal", "platform": "ios"` is
-sufficient for all iOS devices (Xcode 15+ / iOS 17+).  The mac entries with
-explicit scale factors are required for Mac Catalyst.
+The `"universal"` + `"platform": "ios"` entry covers ALL iOS/iPadOS devices
+(Xcode 15+). The `"mac"` entries with explicit scale factors are required
+for Mac Catalyst — without them, the Mac app has no icon.
 
-### Size reference
+Note: some `"mac"` sizes reuse the same file (e.g., `icon_32.png` serves as
+both 32@1x and 16@2x). This is correct — the pixel dimensions match.
 
-| Size | Used for |
-|------|----------|
-| 1024 | App Store, iOS universal |
-| 512 | Mac 512@1x, 256@2x |
-| 256 | Mac 256@1x, 128@2x |
-| 180 | iPhone @3x (60pt) |
-| 167 | iPad Pro @2x (83.5pt) |
-| 152 | iPad @2x (76pt) |
-| 128 | Mac 128@1x |
-| 120 | iPhone @2x (60pt), @3x (40pt) |
-| 87  | Settings @3x (29pt) |
-| 80  | Spotlight @2x (40pt) |
-| 76  | iPad @1x (76pt) |
-| 64  | Mac 32@2x |
-| 60  | Spotlight @3x (20pt) |
-| 58  | Settings @2x (29pt) |
-| 40  | Spotlight @2x (20pt) |
-| 32  | Mac 32@1x, 16@2x |
-| 29  | Settings @1x (29pt) |
-| 20  | Notification @1x (20pt) |
-| 16  | Mac 16@1x |
+### Size reference (Mac Catalyst icons)
+
+- 16px  — Mac 16@1x
+- 32px  — Mac 32@1x, 16@2x
+- 64px  — Mac 32@2x
+- 128px — Mac 128@1x
+- 256px — Mac 256@1x, 128@2x
+- 512px — Mac 512@1x, 256@2x
+- 1024px — App Store, iOS universal, Mac 512@2x
 
 ---
 
@@ -251,31 +299,46 @@ explicit scale factors are required for Mac Catalyst.
 ## Part 6: .gitignore
 
 ```
-# Xcode
-*.xcodeproj/
+## Xcode
 xcuserdata/
-*.xcworkspace/
-DerivedData/
+*.xcscmblueprint
+*.xccheckout
 build/
-*.pbxuser
-*.perspectivev3
-*.mode1v3
-*.mode2v3
+DerivedData/
 *.moved-aside
+*.pbxuser
+!default.pbxuser
+*.mode1v3
+!default.mode1v3
+*.mode2v3
+!default.mode2v3
+*.perspectivev3
+!default.perspectivev3
 *.hmap
 *.ipa
+*.dSYM.zip
+*.dSYM
+*.xcodeproj/project.xcworkspace/
+*.xcodeproj/xcuserdata/
 
-# Local config (public repos)
+## Local config (team signing)
 Local.xcconfig
 
-# macOS
-.DS_Store
-*.swp
-*~
-
-# SPM
+## Swift Package Manager
 .build/
+Packages/
+Package.resolved
+
+## macOS
+.DS_Store
+.AppleDouble
+.LSOverride
 ```
+
+Note: `*.xcodeproj/project.pbxproj` and `*.xcodeproj/xcshareddata/` ARE
+committed. Only user-specific data (xcuserdata, workspace) is ignored.
+XcodeGen regenerates the pbxproj, but having it in git means the project
+opens without running xcodegen first.
 
 ---
 
@@ -321,19 +384,24 @@ struct <appname>App: App {
 
 ## Part 9: Complete Setup Sequence
 
-1. Create directory: `mkdir -p <appname>/<appname>/{Models,Services,ViewModels,Views,Assets.xcassets/{AccentColor.colorset,AppIcon.appiconset}}`
-2. Ask: **"Private or public repo?"**
-3. Write `project.yml` (with or without DEVELOPMENT_TEAM)
-4. Write `Config.xcconfig` with `#include? "Local.xcconfig"`
-5. If public repo: write `Local.xcconfig` with `DEVELOPMENT_TEAM = 644N5FNKG2`
-6. Write `.gitignore` (include `Local.xcconfig` for public repos)
-7. Write `CLAUDE.md`
-8. Write asset catalog JSON files (Contents.json, AccentColor, AppIcon)
-9. Generate icons using Python/Pillow — **RGB mode, no alpha**
-10. Write `<appname>App.swift` and `ContentView.swift`
-11. Run `xcodegen && xcodebuild -project <appname>.xcodeproj -scheme <appname> -destination 'generic/platform=iOS Simulator' build`
-12. `git init && git add -A && git commit`
-13. Create GitHub repo: `gh repo create <org>/<appname> --private --source=. --push`
+1. Create directories:
+   ```
+   mkdir -p <appname>/{<appname>/Views,<appname>/Assets.xcassets/{AccentColor.colorset,AppIcon.appiconset},Shared/{Models,Services,Views},<appname>Tests}
+   ```
+2. Write `project.yml` — never put DEVELOPMENT_TEAM here
+3. Write `Config.xcconfig` with `#include? "Local.xcconfig"`
+4. Write `Local.xcconfig` with `DEVELOPMENT_TEAM = 644N5FNKG2`
+5. Write `.gitignore` (must include `Local.xcconfig`)
+6. Write `CLAUDE.md`
+7. Write asset catalog JSON files (Contents.json, AccentColor, AppIcon)
+8. Generate icons using Python/Pillow — **RGB mode, no alpha**, all Mac sizes
+9. Write `<appname>App.swift` and initial views
+10. Run `xcodegen` to generate .xcodeproj
+11. Build: `xcodebuild build -project <appname>.xcodeproj -scheme <appname> -destination 'platform=iOS Simulator,name=iPhone 16' -quiet`
+12. Run tests: `xcodebuild test -project <appname>.xcodeproj -scheme <appname> -destination 'platform=iOS Simulator,name=iPhone 16' -only-testing:<appname>Tests -quiet`
+13. `git init && git add .gitignore CLAUDE.md project.yml Config.xcconfig <appname>/ <appname>Tests/ Shared/ <appname>.xcodeproj/project.pbxproj <appname>.xcodeproj/xcshareddata/`
+14. `git commit -m "Initial commit"`
+15. Create GitHub repo: `gh repo create <org>/<appname> --private` then `git remote add origin ... && git push -u origin main`
 
 ---
 
@@ -359,5 +427,10 @@ struct <appname>App: App {
    the include optional so builds don't fail when the file doesn't exist (CI,
    new clones).
 
-7. **DO NOT leave .xcodeproj in git** — XcodeGen regenerates it.  Only
-   `project.yml` belongs in version control.
+7. **DO NOT commit xcuserdata or project.xcworkspace** — those are
+   user-specific.  DO commit `project.pbxproj` and `xcshareddata/` so the
+   project opens without running xcodegen first.
+
+8. **DO NOT forget `configFiles:` on the test target** — without it, the
+   test target won't inherit DEVELOPMENT_TEAM from Local.xcconfig and
+   code signing will fail when running tests.
