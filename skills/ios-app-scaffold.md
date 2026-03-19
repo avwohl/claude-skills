@@ -17,23 +17,26 @@ upload.
 <appname>/
 ├── project.yml              # XcodeGen source of truth
 ├── Config.xcconfig          # Build config (includes Local.xcconfig)
-├── Local.xcconfig           # Team ID + signing (gitignored for public repos)
+├── Local.xcconfig           # Team ID + signing (always gitignored)
 ├── CLAUDE.md                # Developer instructions
 ├── .gitignore
-└── <appname>/
-    ├── <appname>App.swift   # @main entry point
-    ├── Models/
-    ├── Services/
-    ├── ViewModels/
-    ├── Views/
-    │   └── ContentView.swift
-    └── Assets.xcassets/
-        ├── Contents.json
-        ├── AccentColor.colorset/
-        │   └── Contents.json
-        └── AppIcon.appiconset/
-            ├── Contents.json
-            └── icon_*.png   # Generated icons (NO alpha channel)
+├── <appname>/
+│   ├── <appname>App.swift   # @main entry point
+│   ├── Views/
+│   │   └── ContentView.swift
+│   └── Assets.xcassets/
+│       ├── Contents.json
+│       ├── AccentColor.colorset/
+│       │   └── Contents.json
+│       └── AppIcon.appiconset/
+│           ├── Contents.json
+│           └── icon_*.png   # Generated icons (NO alpha channel)
+├── Shared/                  # Optional: shared models/services/views
+│   ├── Models/
+│   ├── Services/
+│   └── Views/
+└── <appname>Tests/
+    └── <appname>Tests.swift
 ```
 
 ---
@@ -151,13 +154,10 @@ targets:
 
 ### Required Info.plist keys checklist
 
-| Key | Purpose | Value |
-|-----|---------|-------|
-| `ASSETCATALOG_COMPILER_APPICON_NAME` | Tells Xcode which icon set | `AppIcon` |
-| `INFOPLIST_KEY_CFBundleIconName` | CFBundleIconName in Info.plist | `AppIcon` |
-| `INFOPLIST_KEY_ITSAppUsesNonExemptEncryption` | Skip export compliance dialog | `NO` |
-| `INFOPLIST_KEY_UILaunchScreen_Generation` | Auto-generate launch screen | `YES` |
-| `GENERATE_INFOPLIST_FILE` | Let Xcode generate Info.plist | `YES` |
+- `GENERATE_INFOPLIST_FILE: true` — let Xcode generate Info.plist
+- `ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon` — tells Xcode which icon set to use
+- `INFOPLIST_KEY_ITSAppUsesNonExemptEncryption: NO` — skip export compliance prompt
+- `INFOPLIST_KEY_UILaunchScreen_Generation: true` — auto-generate launch screen
 
 If the app uses location:
 ```yaml
@@ -410,12 +410,13 @@ struct <appname>App: App {
 1. **DO NOT use RGBA for icons** — App Store rejects icons with alpha channel.
    Always `Image.new('RGB', ...)` never `Image.new('RGBA', ...)`.
 
-2. **DO NOT forget ASSETCATALOG_COMPILER_APPICON_NAME and CFBundleIconName** —
-   without both, Xcode won't embed the icon and App Store validation fails with
-   "Missing required icon file" and "Missing Info.plist value".
+2. **DO NOT forget ASSETCATALOG_COMPILER_APPICON_NAME** — without it, Xcode
+   won't embed the icon and App Store validation fails with "Missing required
+   icon file". (CFBundleIconName is auto-derived when GENERATE_INFOPLIST_FILE
+   is true — you don't need to set it separately.)
 
-3. **DO NOT put DEVELOPMENT_TEAM in project.yml for public repos** — the team
-   ID is a secret-adjacent value. Use Local.xcconfig (gitignored) instead.
+3. **DO NOT put DEVELOPMENT_TEAM in project.yml** — always use
+   Local.xcconfig (gitignored) so the team ID stays out of version control.
 
 4. **DO NOT omit ITSAppUsesNonExemptEncryption** — without it, every upload
    prompts for export compliance in App Store Connect.
