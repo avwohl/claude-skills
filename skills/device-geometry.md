@@ -414,6 +414,87 @@ pure math with no device-specific constants.
 
 ---
 
+## Part 7: Apple Watch Device Lookup Table
+
+Portrait orientation (the only orientation on watchOS).
+All Apple Watch displays use @2x.  Multiply pt by 2 for pixels.
+
+    Device group                    Screen (portrait pt)  R (pt)  Scale
+    ------------------------------  --------------------  ------  -----
+    S4/S5/S6/SE/SE2/SE3 40mm       162 x 197             28.0    @2x
+    S4/S5/S6/SE/SE2/SE3 44mm       184 x 224             34.0    @2x
+    S7/S8/S9 41mm                   176 x 215             38.5    @2x
+    S7/S8/S9 45mm                   198 x 242             42.5    @2x
+    S10/S11 42mm                    187 x 223             44.0    @2x
+    S10/S11 46mm                    208 x 248             50.0    @2x
+    Ultra/Ultra 2 49mm              205 x 251             54.0    @2x
+    Ultra 3 49mm                    211 x 257             57.0    @2x
+
+    R = display corner radius (squircle, same n=5 exponent as iPhone)
+    Corner radii sourced from Xcode DeviceCornerRadius in simulator
+    capabilities.plist files.
+
+    Apple Watch has NO notch, Dynamic Island, or home indicator.
+    Safe areas: top ~28pt (time/status), bottom ~0-3pt, left/right 0.
+
+### Auto-detection from screenshot pixel dimensions (portrait)
+
+    Pixels (portrait)  Device group                    R     Scale
+    -----------------  ------------------------------  ----  -----
+    324 x 394          40mm (S4/S5/S6/SE/SE2/SE3)      28    @2x
+    368 x 448          44mm (S4/S5/S6/SE/SE2/SE3)      34    @2x
+    352 x 430          41mm (S7/S8/S9)                  38.5  @2x
+    396 x 484          45mm (S7/S8/S9)                  42.5  @2x
+    374 x 446          42mm (S10/S11)                   44    @2x
+    416 x 496          46mm (S10/S11)                   50    @2x
+    410 x 502          49mm (Ultra/Ultra 2)             54    @2x
+    422 x 514          49mm (Ultra 3)                   57    @2x
+
+### Squircle corner intrusion — worked examples for Apple Watch
+
+    R=28 (40mm), n=5:
+      x= 4pt:  y_min =  1.0 pt
+      x= 6pt:  y_min =  0.4 pt
+      x=10pt:  y_min =  0.0 pt
+
+    R=38.5 (41mm S7/S8/S9), n=5:
+      x= 4pt:  y_min =  6.0 pt
+      x= 6pt:  y_min =  4.1 pt
+      x=10pt:  y_min =  1.9 pt
+      x=20pt:  y_min =  0.2 pt
+
+    R=50 (46mm S10/S11), n=5:
+      x= 4pt:  y_min = 10.5 pt
+      x= 6pt:  y_min =  7.8 pt
+      x=10pt:  y_min =  4.4 pt
+      x=20pt:  y_min =  1.1 pt
+      x=30pt:  y_min =  0.2 pt
+
+    R=57 (Ultra 3), n=5:
+      x= 4pt:  y_min = 12.9 pt
+      x= 6pt:  y_min =  9.7 pt
+      x=10pt:  y_min =  5.8 pt
+      x=20pt:  y_min =  1.7 pt
+      x=30pt:  y_min =  0.4 pt
+
+### Grid layout clearance on Apple Watch
+
+Apple Watch apps often draw a grid that fills most of the screen.
+The same squircle formula applies: the four corners of the grid
+rectangle must satisfy (R-x)^5 + (R-y)^5 <= R^5 where (x,y) is
+the distance from the nearest screen corner.
+
+Typical failure mode: horizontal inset is adequate (~6pt) but
+vertical inset is too small (~2pt), placing the bottom grid corners
+outside the squircle on S7+ watches (R >= 38.5pt).
+
+Fix: use a symmetric inset for both axes and iterate until the grid
+rectangle's tightest corner (usually bottom-left or bottom-right)
+clears the squircle with 2pt breathing room.  See Part 6 for the
+Swift helper function.
+
+---
+
 ## Sources
 
   docs/TODO-device-masks.md              (mask overlay tool spec)

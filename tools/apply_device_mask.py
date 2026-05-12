@@ -78,19 +78,38 @@ DEVICES = {
     (2224, 1668): ("iPad Air 3/Pro 10.5\"",      1112,  834, 2, 0,    20, 0,  0, "none", None),
     (2160, 1620): ("iPad 7th/8th/9th",           1080,  810, 2, 0,    20, 0,  0, "none", None),
     (2048, 1536): ("iPad mini 5/Air 2/Pro 9.7\"", 1024, 768, 2, 0,    20, 0,  0, "none", None),
+
+    # ── Apple Watch: All portrait, @2x, no cutout ───────────────────────
+    # w_pt, h_pt stored in landscape order (w > h) per dict convention;
+    # detect_device returns "portrait" and apply_mask swaps them back.
+    # SA_top = 28pt for the time overlay, SA_bot/SA_lead = 0.
+    ( 324,  394): ("Watch 40mm (S4-S6/SE/SE2/SE3)", 197, 162, 2, 28.0, 28, 0, 0, "none", None),
+    ( 368,  448): ("Watch 44mm (S4-S6/SE/SE2/SE3)", 224, 184, 2, 34.0, 28, 0, 0, "none", None),
+    ( 352,  430): ("Watch 41mm (S7/S8/S9)",         215, 176, 2, 38.5, 28, 0, 0, "none", None),
+    ( 396,  484): ("Watch 45mm (S7/S8/S9)",         242, 198, 2, 42.5, 28, 0, 0, "none", None),
+    ( 374,  446): ("Watch 42mm (S10/S11)",          223, 187, 2, 44.0, 28, 0, 0, "none", None),
+    ( 416,  496): ("Watch 46mm (S10/S11)",          248, 208, 2, 50.0, 28, 0, 0, "none", None),
+    ( 410,  502): ("Watch 49mm (Ultra/Ultra 2)",    251, 205, 2, 54.0, 28, 0, 0, "none", None),
+    ( 422,  514): ("Watch 49mm (Ultra 3)",          257, 211, 2, 57.0, 28, 0, 0, "none", None),
 }
 
 
 def detect_device(w_px, h_px):
     """Auto-detect device from pixel dimensions (landscape or portrait)."""
-    # Try landscape first
     key = (w_px, h_px)
     if key in DEVICES:
-        return DEVICES[key], "landscape"
-    # Try portrait (swap)
+        dev = DEVICES[key]
+        # Watch entries are stored portrait (w < h); phones/tablets landscape (w > h)
+        if w_px < h_px and dev[0].startswith("Watch"):
+            return dev, "portrait"
+        return dev, "landscape"
+    # Try swapped dimensions
     key = (h_px, w_px)
     if key in DEVICES:
-        return DEVICES[key], "portrait"
+        dev = DEVICES[key]
+        if h_px < w_px and dev[0].startswith("Watch"):
+            return dev, "portrait"  # watch screenshot in unexpected orientation
+        return dev, "portrait"
     return None, None
 
 
