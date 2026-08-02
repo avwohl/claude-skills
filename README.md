@@ -147,11 +147,11 @@ what was deliberately left alone and why.
 
 Two cases, chosen to show opposite things:
 
-- **[uplm80](samples/ste100/uplm80-readme/)** (engagement leader) -- what STE
+- **[uplm80](samples/ste100/uplm80-full-rewrite/)** (engagement leader) -- what STE
   fixes.  40 mechanical issues to 6, all 10 code fences byte-identical, and a
   data-corrupting hazard buried in a 43-word sentence promoted to a labeled
   CAUTION block.
-- **[iospharo](samples/ste100/iospharo-readme/)** (highest-starred) -- what STE
+- **[iospharo](samples/ste100/iospharo-full-rewrite/)** (highest-starred) -- what STE
   must not touch.  All five tiers, with a `## Status` section left untouched to
   protect its calibrated hedges, and a credits block whose semicolons are
   copyright notices.  10 of its 12 remaining "violations" are in regions that

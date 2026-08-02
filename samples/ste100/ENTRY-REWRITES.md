@@ -1,9 +1,10 @@
-# Related Projects — before / after
+# Related Projects — the 56 entry rewrites
 
-Every README in the account that carries a **Related Projects** list, before and after the
-entries were rewritten in Simplified Technical English.
+The full text of every distinct Related Projects entry, before and after it was rewritten in
+Simplified Technical English and committed upstream.  The per-repository before/after files are
+listed in [README.md](README.md).
 
-Produced with [`skills/simplified-technical-english.md`](../../../skills/simplified-technical-english.md).
+Produced with [`skills/simplified-technical-english.md`](../../skills/simplified-technical-english.md).
 
 ## What changed
 
@@ -28,42 +29,6 @@ So this pass re-authored the entries deliberately rather than regenerating them,
 hand-written context had to survive the rewrite. Every number, file name, test result and
 inline code span in an original was checked against its replacement.
 
-## Repositories
-
-| Repository | Entries | Before | After |
-|---|---:|---|---|
-| `uc80` | 21 | [before](uc80/before.md) | [after](uc80/after.md) |
-| `uc_core` | 21 | [before](uc_core/before.md) | [after](uc_core/after.md) |
-| `uplm80` | 19 | [before](uplm80/before.md) | [after](uplm80/after.md) |
-| `80un` | 18 | [before](80un/before.md) | [after](80un/after.md) |
-| `cpmdroid` | 18 | [before](cpmdroid/before.md) | [after](cpmdroid/after.md) |
-| `cpmemu` | 18 | [before](cpmemu/before.md) | [after](cpmemu/after.md) |
-| `ioscpm` | 18 | [before](ioscpm/before.md) | [after](ioscpm/after.md) |
-| `learn-ada-z80` | 18 | [before](learn-ada-z80/before.md) | [after](learn-ada-z80/after.md) |
-| `mbasic` | 18 | [before](mbasic/before.md) | [after](mbasic/after.md) |
-| `mbasic2025` | 18 | [before](mbasic2025/before.md) | [after](mbasic2025/after.md) |
-| `mbasicc` | 18 | [before](mbasicc/before.md) | [after](mbasicc/after.md) |
-| `mbasicc_web` | 18 | [before](mbasicc_web/before.md) | [after](mbasicc_web/after.md) |
-| `mpm2` | 18 | [before](mpm2/before.md) | [after](mpm2/after.md) |
-| `romwbw_emu` | 18 | [before](romwbw_emu/before.md) | [after](romwbw_emu/after.md) |
-| `scelbal` | 18 | [before](scelbal/before.md) | [after](scelbal/after.md) |
-| `uada80` | 18 | [before](uada80/before.md) | [after](uada80/after.md) |
-| `ucow` | 18 | [before](ucow/before.md) | [after](ucow/after.md) |
-| `um80_and_friends` | 18 | [before](um80_and_friends/before.md) | [after](um80_and_friends/after.md) |
-| `upeepz80` | 18 | [before](upeepz80/before.md) | [after](upeepz80/after.md) |
-| `z80cpmw` | 18 | [before](z80cpmw/before.md) | [after](z80cpmw/after.md) |
-| `uc386` | 9 | [before](uc386/before.md) | [after](uc386/after.md) |
-| `iospharo` | 5 | [before](iospharo/before.md) | [after](iospharo/after.md) |
-| `pharo-headless-test` | 5 | [before](pharo-headless-test/before.md) | [after](pharo-headless-test/after.md) |
-| `soogle` | 5 | [before](soogle/before.md) | [after](soogle/after.md) |
-| `validate_smalltalk_image` | 5 | [before](validate_smalltalk_image/before.md) | [after](validate_smalltalk_image/after.md) |
-| `claude-skills` | 4 | [before](claude-skills/before.md) | [after](claude-skills/after.md) |
-| `freedos_micro_python` | 4 | [before](freedos_micro_python/before.md) | [after](freedos_micro_python/after.md) |
-| `smalltalk80-2026` | 4 | [before](smalltalk80-2026/before.md) | [after](smalltalk80-2026/after.md) |
-| `uplox` | 4 | [before](uplox/before.md) | [after](uplox/after.md) |
-| `freedos_git` | 3 | [before](freedos_git/before.md) | [after](freedos_git/after.md) |
-| `hearzork` | 3 | [before](hearzork/before.md) | [after](hearzork/after.md) |
-| `dosiz` | 2 | [before](dosiz/before.md) | [after](dosiz/after.md) |
 
 ## The 56 distinct texts
 
@@ -327,12 +292,12 @@ not. The `kept` line records what had to survive.
 
 **`uada80`** — in `uplox`
 
-> **before:** Ada 2012 → Z80 / CP/M 2.2 (+ MP/M II `.prl`). Consumes `ada_full.uplox`. 100% on ACATS A/C/D/E/L (2846/2846) and 97.8% on the GNAT runtime (1072/1096); see [WIP.md](WIP.md) for the corpus-by-corpus numbers.
+> **before:** Ada 2012 → Z80 / CP/M 2.2 (+ MP/M II `.prl`). Consumes `ada_full.uplox`. 100% on ACATS A/C/D/E/L (2846/2846) and 97.8% on the GNAT runtime (1072/1096); see `[WIP.md](WIP.md)` for the corpus-by-corpus numbers.
 >
-> **after:** Ada compiler for the Z80 processor and CP/M 2.2. It compiles a subset of Ada 2012, writes MP/M II `.prl` files, and reads `ada_full.uplox`. It scores 100 percent on ACATS A/C/D/E/L (2846/2846) and 97.8 percent on the GNAT run time (1072/1096). [WIP.md](WIP.md) gives the numbers for each corpus.
+> **after:** Ada compiler for the Z80 processor and CP/M 2.2. It compiles a subset of Ada 2012, writes MP/M II `.prl` files, and reads `ada_full.uplox`. It scores 100 percent on ACATS A/C/D/E/L (2846/2846) and 97.8 percent on the GNAT run time (1072/1096). `[WIP.md](WIP.md)` gives the numbers for each corpus.
 
 > 
-> *kept:* count 1, in uplox only. Ada 2012, CP/M 2.2, MP/M II `.prl`, the `ada_full.uplox` input, 100 percent on ACATS A/C/D/E/L (2846/2846), 97.8 percent on the GNAT run time (1072/1096), and the [WIP.md](WIP.md) link all survive
+> *kept:* count 1, in uplox only. Ada 2012, CP/M 2.2, MP/M II `.prl`, the `ada_full.uplox` input, 100 percent on ACATS A/C/D/E/L (2846/2846), 97.8 percent on the GNAT run time (1072/1096), and the `[WIP.md](WIP.md)` link all survive
 
 **`uc386`** — in `freedos_git`
 
@@ -501,7 +466,7 @@ not. The `kept` line records what had to survive.
 - CP/M 2.2 restored to both cpmemu entries. Both agent rewrites had dropped the version number while replacing the banned head noun "CP/M 2.2 emulator". The glossary bans that head noun, not the fact. Both entries now read "the BDOS and BIOS calls of CP/M 2.2 programs", which also sets up the contrast with the ioscpm entry (CP/M 2.2 and CP/M 3) in the same list.
 - C23 restored to the three uc80 entries whose originals stated it, after the head noun was corrected to "C compiler" under rule 8. It survives as "the C23 frontend of uc_core" (uc386 README) and "the Z80 backend on this C23 frontend" (uplox README). The uc_core README entry does not repeat it because uc_core is described as the C23 frontend in the same README.
 - "removes dead stores" restored to the 17-README upeepz80 entry, which had listed only two of the three verified actions while its 2-README twin listed three.
-- Full script check of all 56 pairs: every inline code span in an original appears unchanged in its rewrite (`.cfg`, `dos_emu`, `c23.uplox`, `cowgol.uplox`, `uplox_cowgol.py`, `ada_full.uplox`, `plm_pre.uplox`, `plm_full.uplox`, `$`, `.prl`, `.exe`, `gcc-c-torture`, `c-testsuite`, `examples/c23.uplox`, `.claude/skills/`, `scripts/pharo-headless-test/`, [WIP.md](WIP.md)). Every number survives except three deliberate cases listed under flags.
+- Full script check of all 56 pairs: every inline code span in an original appears unchanged in its rewrite (`.cfg`, `dos_emu`, `c23.uplox`, `cowgol.uplox`, `uplox_cowgol.py`, `ada_full.uplox`, `plm_pre.uplox`, `plm_full.uplox`, `$`, `.prl`, `.exe`, `gcc-c-torture`, `c-testsuite`, `examples/c23.uplox`, `.claude/skills/`, `scripts/pharo-headless-test/`, `[WIP.md](WIP.md)`). Every number survives except three deliberate cases listed under flags.
 - All hand-written relationships from the count-1 entries verified present: sibling backend and shared uc_core frontend, consumer of uc_core, source of the vendored emu88 CPU core, translation-layer template and origin of the .cfg format, intended test host for uc386, template for an eventual upeep386, Z80 analogue of what uc386 needs for i386, extracted from this project and included as a submodule, upstream and vendored and pinned, the target operating system, builds this port, and the trailing colon that introduces uplox's nested target list.
 
 ## Open judgment calls
