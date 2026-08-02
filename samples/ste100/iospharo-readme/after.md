@@ -1,0 +1,256 @@
+# iospharo
+
+A Pharo Smalltalk VM for iOS and macOS, written as a clean C++ interpreter.
+
+## Overview
+
+iospharo runs standard Pharo 13 and Pharo 14 images on iOS devices and Mac
+(through Catalyst). It is a from-scratch interpreter implementation, not a port
+of the Cog JIT VM. It gives full support for the Sista V1 bytecode set, for FFI
+with callbacks, and for the standard Pharo test suite.
+
+**Note:** Pharo 12 and earlier use a different class table layout. The VM does
+not yet handle that layout.
+
+## Status
+
+**VM core (solid):**
+- **99.90% test pass rate** on Mac Catalyst (13,040 / 13,053)
+- **99.55% test pass rate** on iOS Simulator
+- FFI with callbacks (sigsetjmp/siglongjmp)
+- All standard VM plugins built-in (B2D, JPEG, DSA, SSL, etc.)
+- Third-party libraries: cairo, freetype, harfbuzz, pixman, libpng, OpenSSL, libssh2, libgit2
+
+**GUI (working):**
+- Metal rendering pipeline — Pharo desktop renders correctly
+- Menu bar, world menu, and context menus all functional
+- Touch-to-mouse event translation (tap, long-press, two-finger, pinch, drag)
+- Hardware keyboard support with modifier keys
+- Image library with download, import, and catalog management
+
+## Install from the App Store
+
+Available for iPad, iPhone, and Mac:
+
+[Download on the App Store](https://apps.apple.com/us/app/pharosmalltalk/id6759073615)
+
+**Requirements:**
+- iPad (5th gen / 2017 or newer) or iPhone (6s / 2015 or newer) or Mac (Apple Silicon or Intel)
+- iOS / iPadOS 15.0 or later, macOS 14.0 or later
+- ~150 MB free storage (app + image + sources)
+
+The app downloads the Pharo images. You do not have to download them first.
+
+## Beta Testing (TestFlight)
+
+A newer pre-release version can be available through TestFlight:
+
+1. Install **TestFlight** from the App Store (free, ~30 MB)
+2. Open this invite link on your iPad or iPhone: [Join the Beta](https://testflight.apple.com/join/kGmPQFr9)
+3. Tap "Accept". Then tap "Install". The app comes on your home screen.
+
+TestFlight builds expire after 90 days. But a build updates automatically when a
+new build becomes available.
+
+## Prerequisites
+
+Install these before you build:
+
+```bash
+# Xcode command-line tools (includes clang, make, etc.)
+xcode-select --install
+
+# CMake (build system)
+brew install cmake
+
+# For third-party library builds (cairo, freetype, etc.)
+brew install meson ninja pkg-config autoconf automake libtool
+```
+
+You also need:
+- **Xcode 15+** (for the iOS/Mac Catalyst app)
+- **A Pharo 13 or 14 image** — download from https://pharo.org/download
+
+## Building
+
+### Step 1: Build libffi and SDL2 xcframeworks
+
+```bash
+scripts/build-libffi.sh
+scripts/build-sdl2.sh
+```
+
+These scripts download, cross-compile, and package libffi (FFI/callbacks) and
+SDL2 (display driver) as xcframeworks. The scripts make xcframeworks for iOS
+device, Simulator, Mac Catalyst, and macOS. This step takes approximately 10
+minutes. The xcframeworks are large, thus `.gitignore` contains them.
+
+### Step 2: Build third-party libraries
+
+This script cross-compiles cairo, freetype, harfbuzz, pixman, libpng, OpenSSL,
+libssh2, and libgit2 as static xcframeworks:
+
+```bash
+scripts/build-third-party.sh
+```
+
+The script downloads source tarballs. Then it builds them for iOS device,
+Simulator, and Mac Catalyst. The first run takes approximately 15 minutes. To
+skip OpenSSL and libssh2, use `--no-crypto`. The script always builds libgit2,
+because local repository support needs it.
+
+### Step 3: Build the app
+
+```bash
+open iospharo.xcodeproj
+```
+
+Select your target (iOS device, Simulator, or My Mac - Catalyst) and build.
+
+Xcode has a "Check XCFramework Freshness" build phase. This phase runs
+`scripts/build-xcframework.sh` automatically when the VM source files
+(`src/vm/`, `src/platform/`) are newer than the xcframework. The first Xcode
+build takes some minutes, because it compiles the VM. Subsequent builds are
+fast, unless you change the VM sources.
+
+To rebuild the VM xcframework manually (for example, after a `git pull`):
+
+```bash
+scripts/build-xcframework.sh
+```
+
+This command makes `Frameworks/PharoVMCore.xcframework`. It contains slices for
+iOS device (arm64), iOS Simulator (arm64 + x86_64), and Mac Catalyst
+(arm64 + x86_64).
+
+**Code signing (optional):** To deploy to a physical device or to the App Store,
+do these steps:
+
+1. Copy `Local.xcconfig.example` to `Local.xcconfig`.
+2. Put your Apple Developer Team ID in `Local.xcconfig`.
+
+`.gitignore` contains `Local.xcconfig`.
+
+### Quick development build (Mac only)
+
+Use this build for faster iteration on the VM internals. It makes a headless
+command-line binary, not the iOS/Catalyst app. Do Step 1 and Step 2 first: the
+cmake build links against the xcframeworks in `Frameworks/`.
+
+```bash
+cmake -B build -DCMAKE_BUILD_TYPE=Release
+cmake --build build
+
+# Run headless with a Pharo image
+./build/test_load_image /path/to/Pharo.image
+```
+
+## Project Structure
+
+```
+iospharo/
+├── src/vm/           C++ VM: Interpreter, ObjectMemory, Primitives, FFI
+├── src/include/      VM headers (vmCallback.h, etc.)
+├── src/platform/     Platform abstraction (EventQueue, display)
+├── src/ios/          Generated interpreter reference (cointerp-cpp.c)
+├── iospharo/         SwiftUI app (Metal renderer, bridge, views)
+├── scripts/          Build scripts (VM xcframework, third-party libraries)
+├── docs/             Technical reference (bytecode spec, architecture)
+├── Frameworks/       Built xcframeworks (gitignored)
+└── CMakeLists.txt    CMake build for the VM library
+```
+
+## Architecture
+
+```
+┌─────────────────────────────┐
+│   SwiftUI App               │
+│   (ContentView, Settings)   │
+├─────────────────────────────┤
+│   PharoBridge.swift         │  VM lifecycle, event bridge
+├─────────────────────────────┤
+│   MetalRenderer.swift       │  GPU display rendering
+├─────────────────────────────┤
+│   C++ Interpreter           │  Sista V1 bytecodes, GC,
+│   (libPharoVMCore.a)        │  FFI, primitives, plugins
+└─────────────────────────────┘
+```
+
+The OSSDL2Driver of the image calls SDL2 functions through FFI. The SDL2 stubs
+of this project connect these functions to the Metal rendering pipeline. The app
+maps touch gestures to Pharo mouse events (tap=left-click, long-press=right-click,
+two-finger tap=right-click).
+
+### Startup patches
+
+The app applies Smalltalk patches at each launch. The patches correct image bugs
+and adapt to VM differences, for example the stubbed SDL2 and the missing font
+glyphs. Patches are version-specific: the app finds the Pharo version, then loads
+`startup-13.st` or `startup-14.st`.
+
+To add your own patches, make a `startup-user.st` file adjacent to the image
+file. The app never overwrites that file. For the full details, see
+[docs/startup-system.md](docs/startup-system.md).
+
+## Configuration
+
+`PharoBridge.swift` sets the VM parameters when it calls `vm_init()`:
+
+  maxOldSpaceSize   2 GB    Max heap (virtual, lazy commit)
+  edenSize          10 MB   Young generation size
+  maxCodeSize       0       JIT code space (unused)
+
+## Related
+
+Other repos in this collection:
+
+- **[smalltalk80-2026](https://github.com/avwohl/smalltalk80-2026)** — Smalltalk-80 VM implementation of the 1983 Blue Book Xerox virtual image, targeting macOS / Mac Catalyst, iOS, Windows, and Linux.
+- **[validate_smalltalk_image](https://github.com/avwohl/validate_smalltalk_image)** — Standalone validator and export tool for Spur-format Smalltalk image files (heap integrity, SHA-256 manifests, reference graphs).
+- **[pharo-headless-test](https://github.com/avwohl/pharo-headless-test)** — Headless Pharo test runner with a fake GUI; clicks menus, takes screenshots, runs SUnit without a display. Extracted from this project; included here as a submodule at `scripts/pharo-headless-test/`.
+- **[soogle](https://github.com/avwohl/soogle)** — Smalltalk code search engine that indexes packages across Pharo, Squeak, GemStone and more.
+- **[claude-skills](https://github.com/avwohl/claude-skills)** — Open source skills for Claude Code: reusable knowledge and algorithms packaged as `.claude/skills/` markdown files.
+
+## License
+
+MIT — see [LICENSE](LICENSE) and [THIRD_PARTY_LICENSES](THIRD_PARTY_LICENSES).
+
+## Credits and Acknowledgements
+
+This project would not exist without the decades of work by the Smalltalk
+community. The VM's interpreter, object memory, and primitives are a clean
+C++ reimplementation of the architecture defined by the Pharo and Squeak
+projects.
+
+**Pharo and predecessors:**
+- [Pharo](https://pharo.org) — the Smalltalk environment this VM executes
+  (MIT; Copyright 2008-2019 The Pharo Project, Inria)
+- [OpenSmalltalk-VM](https://github.com/OpenSmalltalk/opensmalltalk-vm) —
+  the reference VM from which VMMaker-generated plugin code and headers
+  are taken (MIT; Copyright 2013 3D Immersive Collaboration Consulting, LLC)
+- [Squeak](http://squeak.org) — the original open source Smalltalk from which
+  Pharo descends (MIT; Copyright 1996-2008 Viewpoints Research Institute,
+  Apple Inc.)
+
+**VMMaker-generated plugins included in this repo:**
+- BalloonEnginePlugin (B2DPlugin.c) — vector graphics
+- DSAPlugin (DSAPrims.c) — digital signature algorithm
+- JPEGReaderPlugin, JPEGReadWriter2Plugin — JPEG codec wrappers
+- SqueakSSLPlugin (SqueakSSL.c, sqMacSSL.c by Andreas Raab and Tobias Pape)
+
+**Bundled libraries:**
+- [Independent JPEG Group](http://www.ijg.org) libjpeg 6b by Thomas G. Lane
+  (IJG license) — bundled in src/vm/plugins/jpeg/
+
+**Statically linked libraries (cross-compiled as xcframeworks):**
+- [libffi](https://github.com/libffi/libffi) 3.5.2 — Foreign Function Interface (MIT)
+- [SDL2](https://www.libsdl.org) 2.26.5 — Simple DirectMedia Layer (zlib)
+- [cairo](https://cairographics.org) 1.18.2 — 2D graphics (LGPL-2.1 / MPL-1.1)
+- [FreeType](https://freetype.org) 2.13.3 — font rendering (FTL)
+- [pixman](https://cairographics.org) 0.43.4 — pixel manipulation (MIT)
+- [HarfBuzz](https://github.com/harfbuzz/harfbuzz) 10.1.0 — text shaping (MIT)
+- [libpng](http://libpng.org) 1.6.43 — PNG support (libpng license)
+- [OpenSSL](https://www.openssl.org) 3.4.0 — cryptography (Apache-2.0)
+- [libssh2](https://www.libssh2.org) 1.11.1 — SSH client (BSD-3-Clause)
+- [libgit2](https://libgit2.org) 1.8.4 — Git library (GPL-2.0 with linking exception)
+
+This software is based in part on the work of the Independent JPEG Group.
