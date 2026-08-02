@@ -16,10 +16,18 @@ right answer is **do not change this**.
 └── NOTES.md     rule-by-rule rationale, measured counts, and what was left alone
 ```
 
+The `uplm80` and `iospharo` cases are **illustrative** — full-document conversions pinned to a
+commit, never pushed upstream.  The `related-projects` case is **applied** — its `after.md` files
+are what is live in those 32 repositories today.  Because of that, the pinned `before.md` in the
+two illustrative cases no longer matches current upstream: their Related Projects sections have
+since been rewritten by the applied pass.  That is expected, and it is why each case records the
+commit it was taken from.
+
 ## Cases
 
 | Case | Source | Demonstrates |
 |---|---|---|
+| [`related-projects`](related-projects/) | 32 repos, 422 entries, **applied upstream** | **What a real rollout looks like.** 422 list entries reducing to 56 distinct texts, rewritten and committed to 32 repositories. Only the Related Projects section changed in each — verified byte-identical elsewhere. |
 | [`uplm80-readme`](uplm80-readme/) | [avwohl/uplm80](https://github.com/avwohl/uplm80) @ `d99b72f` | **What STE fixes.** A data-corrupting hazard buried in a 43-word sentence promoted to a CAUTION (7.1–7.3), 11 passives made active, 2 semicolons removed, 6 over-length sentences split. Tiers A, B, C, E. 40 → 6 issues. |
 | [`iospharo-readme`](iospharo-readme/) | [avwohl/iospharo](https://github.com/avwohl/iospharo) @ `d2ba261` | **What STE must not touch.** All five tiers, including a Tier D `## Status` section left untouched to protect its hedges, and a Tier E credits block whose semicolons are copyright notices. 29 → 12 issues, of which 10 are inside regions that were correctly not edited. |
 
