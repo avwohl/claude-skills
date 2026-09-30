@@ -28,6 +28,10 @@ implementation guidance.
 - **apple-hig** - Apple Human Interface Guidelines reference
 - **simplified-technical-english** - ASD-STE100 Simplified Technical English for software documentation
 - **ios-app-scaffold** - recipe for a new iOS/Mac Catalyst app with XcodeGen
+- **watchos-hig** - Apple Human Interface Guidelines reference for watchOS
+- **how-to-in-app-purchase** - consumable in-app purchases (coins, gems) with StoreKit 2
+- **how-to-make-a-leaderboard** - delta-based multi-device Game Center leaderboards
+- **how-to-preserve-game-state** - keep game progress across reinstalls and devices with iCloud KVS
 
 The `skills/` directory holds every skill file.
 

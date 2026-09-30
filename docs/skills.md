@@ -62,3 +62,57 @@ full setup sequence from `mkdir` to `gh repo create`.
 Handles the private-vs-public repo decision (team ID in project.yml vs
 gitignored Local.xcconfig) and includes a "what NOT to do" section covering
 the alpha channel, missing icon keys, and export compliance pitfalls.
+
+## watchos-hig
+
+Apple Human Interface Guidelines reference for watchOS apps built in SwiftUI.
+Covers display sizes for current and legacy Apple Watch models, typography (SF
+Compact text styles and Dynamic Type), color and materials, layout (margins,
+touch targets, component heights), navigation (watchOS 10 vertical TabView,
+NavigationSplitView, NavigationStack), the Digital Crown, complications
+(WidgetKit families), notifications (short and long look), the Always On
+display, Smart Stack, app lifecycle, accessibility, and Liquid Glass in
+watchOS 26.
+
+Ends with a "what NOT to do" list, such as porting the iPhone layout or
+requiring extensive text input.
+
+## how-to-in-app-purchase
+
+Guide to consumable in-app purchases (coins, gems, tokens) for iOS and watchOS
+games with StoreKit 2.  Covers the App Store Connect checklist and product ID
+convention, review metadata (the review note and screenshot every product
+needs), entitlements, the purchase flow, and the App Store Connect API.
+
+The core is the coin balance design.  A single `balance` integer synced with
+`max()` lets a player spend the same coins on two devices.  The skill stores two
+counters that only increase, `totalEarned` and `totalSpent`, and computes the
+balance as the difference.  Also covers sync through iCloud KVS and
+WatchConnectivity, the shop UI, common mistakes, and a testing checklist.
+
+## how-to-make-a-leaderboard
+
+Delta-based Game Center leaderboard system for iOS and Mac games.  Each device
+keeps only the points earned since its last successful upload.  On upload the
+device reads the current Game Center score, adds its delta and submits the sum,
+so a score from one device never overwrites points from another.
+
+Covers the data model, version-safe decoding for upgrades, the uploader with
+exponential backoff counted in games played, offline play, per-category
+scores, leaderboard configuration (Most Recent Score, not Best Score), an
+unsent-data indicator in the UI, and watchOS notes.  Includes common mistakes
+and a testing checklist.
+
+## how-to-preserve-game-state
+
+Keeps game progress through uninstall and reinstall, and in sync across
+iPhone, iPad, Mac and Apple Watch, with the iCloud key-value store.  Explains
+what Game Center stores (leaderboard scores and achievements) and what the game
+must sync itself.
+
+Covers an audit method to find persisted state with no backup, the
+monotonic-counter merge with `max(local, remote)`, which values to sync first,
+how to handle values that can go down (current streak, per-difficulty
+dictionaries), initialization order (merge before any write, so a fresh install
+does not push zeros over the cloud values), WatchConnectivity, a key prefix
+convention, a migration plan from local-only storage, and iCloud KVS limits.
